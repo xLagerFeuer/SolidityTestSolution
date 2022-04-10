@@ -1,0 +1,1 @@
+Implementation ERC992 standart for test case.
