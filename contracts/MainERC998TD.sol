@@ -6,14 +6,21 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IERC998ERC721TopDown.sol";
 import "./MainERC721.sol";
 
+// TODO: aprroved address, ERC adress: call method from IERC721 (?),
+
 contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
     constructor() MainERC721("TESTparent", "TEST") {}
+
+    address private _contractOwner = owner();
  
     mapping(uint256=>uint256[]) public prnt2chld;
     mapping(uint256=>uint256) public chld2prnt;
     mapping(uint256=>address) public tokenOwnerOf;
 
-    uint256 constant public ERC998_MAGIC = uint256(0xcd740db5);
+    uint256 constant public ERC998_MAGIC = uint256(0xcd740db5); // TODO: maybe cast it to bytes4
+    bytes4 constant public ERC721_MAGIC = 0x150b7a02;
+    address constant public CURRENT_ERC = MainERC721.address; // TODO: refactor it not only for my ERC (without const)
+    
     
     function _bytes2address(bytes32 x) private pure returns (address addr) {
         assembly { addr := mload(add(x,32)) }
@@ -32,18 +39,21 @@ contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
     // therefore, if tokenid don't have parents => he is a root token
 
     function rootOwnerOf(uint256 _tokenId) public override view returns (bytes32) {
-        return rootOwnerOfChild(tokenOwnerOf[_tokenId], _tokenId);
+        return rootOwnerOfChild(CURRENT_ERC, _tokenId);
     }
 
     function rootOwnerOfChild(
-        address _childContract, // HELP: maybe childOwner?
+        address _childContract, // TODO: rewrite _childContract
         uint256 _childTokenId 
     )
     public override view returns (bytes32) {
+        require(_childContract == CURRENT_ERC, "contract does not support others ERC contracts");
+
         uint256 _parentTokenID = chld2prnt[_childTokenId];
         uint256 _parentOwner = _address2uint(tokenOwnerOf[_parentTokenID]);
-        if (_parentOwner == 0) return _toBytes(ERC998_MAGIC | _address2uint(_childContract)); // TODO: right shift _parentOwner on x bits 
-        else return rootOwnerOfChild(_bytes2address(_toBytes(_parentOwner)), _parentTokenID);
+
+        if (_parentOwner == 0) return _toBytes(ERC998_MAGIC | _parentOwner); // TODO: right shift _parentOwner on x bits 
+        else return rootOwnerOfChild(CURRENT_ERC, _parentTokenID);
         // require(_parentOwner != 0, "No parents");
     }
 
@@ -52,75 +62,106 @@ contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
         uint256 _childTokenId 
     ) 
     external override view returns (
-      bytes32, 
-      uint256 parentTokenId
+        bytes32, uint256
     ) {
-        parentTokenId = chld2prnt[_childTokenId];
-        uint256 _tokenOwner = uint256(uint160(tokenOwnerOf[parentTokenId]));
+        require(_childContract == CURRENT_ERC, "contract does not support others ERC contracts");
+
+        // TODO: wrap it to function
+        uint256 _parentTokenID = chld2prnt[_childTokenId];
+        uint256 _parentOwner = _address2uint(tokenOwnerOf[_parentTokenID]);
+
+        return (_toBytes(ERC998_MAGIC | _parentOwner), _parentTokenID); // TODO: right shift _parentOwner on x bits 
         // require(_tokenOwner != 0, "No parents");
-        return (_toBytes(ERC998_MAGIC | _tokenOwner), parentTokenId); // TODO: right shift _parentOwner on x bits 
     }
     
-//     function onERC721Received(
-//     address _operator, 
-//     address _from, 
-//     uint256 _childTokenId, 
-//     bytes memory _data
-//   ) 
-//     external 
-//     returns(bytes4) {
+    function onERC721Received(
+        address _operator, 
+        address _from, 
+        uint256 _childTokenId, 
+        bytes memory _data
+    ) 
+    private override 
+    returns(bytes4) {
+        // bad practice, TODO: find solution 
+        emit TransferChild(_from, _operator, CURRENT_ERC, _childTokenId);
 
-//     }
 
-//     unction transferChild(
-//     uint256 _fromTokenId,
-//     address _to, 
-//     address _childContract, 
-//     uint256 _childTokenId
-//   ) 
-//     external;
 
-//     function safeTransferChild(
-//     uint256 _fromTokenId,
-//     address _to, 
-//     address _childContract, 
-//     uint256 _childTokenId
-//   ) 
-//     external;
+        emit ReceivedChild(_from, _operator, CURRENT_ERC, _childTokenId);
+        return ERC721_MAGIC;
+    }
 
-//     function safeTransferChild(
-//     uint256 _fromTokenId,
-//     address _to, 
-//     address _childContract, 
-//     uint256 _childTokenId, 
-//     bytes calldata _data
-//   ) 
-//     external;
+    // function transferChild(
+    // uint256 _fromTokenId,
+    // address _to, 
+    // address _childContract, 
+    // uint256 _childTokenId
+    // ) 
+    // private override {
+    //     emit TransferChild(_fromTokenId, _to, _childContract, _childTokenId);
 
-//     function transferChildToParent(
-//     uint256 _fromTokenId, 
-//     address _toContract, 
-//     uint256 _toTokenId, 
-//     address _childContract, 
-//     uint256 _childTokenId, 
-//     bytes calldata _data
-//   ) 
-//     external;
+    // } 
 
-//     function getChild(
-//     address _from, 
-//     uint256 _tokenId, 
-//     address _childContract, 
-//     uint256 _childTokenId
-//   ) 
-//     external;
 
-    // function connectToParent(uint256) {
+    function safeTransferChild(
+    uint256 _fromTokenId,
+    address _to, 
+    address _childContract, 
+    uint256 _childTokenId, 
+    bytes calldata _data
+  ) 
+    external override {
+        require();
+        // disconnectChild()
+        // connectChild()
+    }
 
-    // }
+    function safeTransferChild(
+    uint256 _fromTokenId,
+    address _to, 
+    address _childContract, 
+    uint256 _childTokenId
+  ) 
+    external override {
+        require();
+        this.safeTransferChild( // maybe ERROR: why need this. declaration?
+            _fromTokenId, _to, _childContract, _childTokenId, bytes(0)
+        );
 
-    // function childConnectTo() {
+    }
 
-    // }
+    
+
+    // not required, because ERC721 bottom-up implementation does not exist
+    function transferChildToParent(
+    uint256 _fromTokenId, 
+    address _toContract, 
+    uint256 _toTokenId, 
+    address _childContract, 
+    uint256 _childTokenId, 
+    bytes calldata _data
+  ) 
+    external override {
+        // nothing
+    }
+
+    function getChild(
+        address _from, 
+        uint256 _tokenId, 
+        address _childContract, 
+        uint256 _childTokenId
+    ) 
+    external override {
+        
+    }
+
+    function connectToParent(
+        uint256 _fromTokenId,
+        uint256 _toTokenId
+    ) 
+    public {
+        require(msg.sender == _contractOwner, "Access only for conract owner");
+        prnt2chld[_toTokenId] = _fromTokenId;
+    }
 
 }
