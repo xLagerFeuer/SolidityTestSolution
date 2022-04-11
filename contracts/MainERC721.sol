@@ -12,13 +12,7 @@ contract MainERC721 is ERC721URIStorage, Ownable  {
     using Counters for Counters.Counter;
     Counters.Counter private _idGenerator;
 
-    uint256 _tokenId;
-
     constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) {}
-
-    function tokenId() public view returns (uint256) {
-        return _tokenId;
-    }
 
     function mintNFT(address _recipient, string memory _tokenURI)
         public onlyOwner
