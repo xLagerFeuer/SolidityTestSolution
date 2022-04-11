@@ -3,12 +3,30 @@ pragma solidity ^0.8.2;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+// import "@openzeppelin/contracts/utils/EnumerableSet.sol";
 import "./interfaces/IERC998ERC721TopDown.sol";
 import "./MainERC721.sol";
 
 // TODO: aprroved address, ERC adress: call method from IERC721 (?),
 
 contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
+    // later
+    // using EnumerableSet for EnumerableSet.AddressSet;
+
+    // struct Set {
+    //     uint256[] values;
+    //     mapping (uint256 => bool) is_in;
+    // }
+
+    // Set my_set;
+
+    // function add(uint a) public {
+    //     if (!my_set.is_in[a]) {
+    //         my_set.values.push(a);
+    //         my_set.is_in[a] = true;
+    //     }
+    // }
+    
     constructor() MainERC721("TESTparent", "TEST") {}
 
     address private _contractOwner = owner();
@@ -20,8 +38,9 @@ contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
     bytes4 constant public ERC721_MAGIC = 0x150b7a02;
     // address constant public CURRENT_ERC = address(this); // misscode
     
-    // modifier notNull
-    // function exist
+    function _exist(address x) private returns (bool) {
+        return x != address(0);
+    }
     
     function _bytes2address(bytes32 x) private pure returns (address addr) {
         assembly { addr := mload(add(x,32)) }
@@ -55,7 +74,7 @@ contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
 
         if (_parentOwner == 0) return _toBytes(ERC998_MAGIC | _parentOwner); // TODO: right shift _parentOwner on x bits 
         else return rootOwnerOfChild(_childContract, _parentTokenID);
-        // require(_parentOwner != 0, "No parents");
+        
     }
 
     function ownerOfChild( 
@@ -68,11 +87,24 @@ contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
         // TODO: wrap it to function
         uint256 _parentTokenID = chld2prnt[_childTokenId];
         uint256 _parentOwner = _address2uint(tokenOwnerOf[_parentTokenID]);
+        require(_parentOwner != 0, "No parents");
 
         return (_toBytes(ERC998_MAGIC | _parentOwner), _parentTokenID); // TODO: right shift _parentOwner on x bits 
-        // require(_tokenOwner != 0, "No parents");
     }
     
+
+    function connectChild(
+        uint256 childId,
+        uint256 parentId
+    ) 
+    public onlyOwner {
+        require(tokenOwnerOf[childId] != address(0) && tokenOwnerOf[parentId] != address(0), "Child or parent token does not exist");
+        prnt2chld[parentId].push(childId);
+        chld2prnt[childId] = parentId;
+    }
+
+
+    // later
     function onERC721Received(
         address _operator, 
         address _from, 
@@ -91,11 +123,12 @@ contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
     uint256 _childTokenId
     ) 
     external override {
-        // emit TransferChild(_fromTokenId, _to, _childContract, _childTokenId);
+        // emit TransferChild(_fromTokenId, _to, _childContract, _childTokenId); ??
 
     } 
 
 
+    // later
     function safeTransferChild(
     uint256 _fromTokenId,
     address _to, 
@@ -109,6 +142,8 @@ contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
         // connectChild()
     }
 
+
+    // later
     function safeTransferChild(
     uint256 _fromTokenId,
     address _to, 
@@ -123,7 +158,6 @@ contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
 
     }
 
-    
 
     // not required, because ERC721 bottom-up implementation does not exist
     function transferChildToParent(
@@ -148,15 +182,4 @@ contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
     external override {
         // nothing
     }
-
-    function connectChild(
-        uint256 childId,
-        uint256 parentId
-    ) 
-    public onlyOwner {
-        require(tokenOwnerOf[childId] != address(0) && tokenOwnerOf[parentId] != address(0), "Child or parent token does not exist");
-        prnt2chld[parentId].push(childId);
-        chld2prnt[childId] = parentId;
-    }
-
 }
