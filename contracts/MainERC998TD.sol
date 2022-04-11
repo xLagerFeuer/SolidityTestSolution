@@ -15,12 +15,13 @@ contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
  
     mapping(uint256=>uint256[]) public prnt2chld;
     mapping(uint256=>uint256) public chld2prnt;
-    mapping(uint256=>address) public tokenOwnerOf;
 
     uint256 constant public ERC998_MAGIC = uint256(0xcd740db5); // TODO: maybe cast it to bytes4
     bytes4 constant public ERC721_MAGIC = 0x150b7a02;
     // address constant public CURRENT_ERC = address(this); // misscode
     
+    // modifier notNull
+    // function exist
     
     function _bytes2address(bytes32 x) private pure returns (address addr) {
         assembly { addr := mload(add(x,32)) }
@@ -153,7 +154,9 @@ contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
         uint256 parentId
     ) 
     public onlyOwner {
+        require(tokenOwnerOf[childId] != address(0) && tokenOwnerOf[parentId] != address(0), "Child or parent token does not exist");
         prnt2chld[parentId].push(childId);
+        chld2prnt[childId] = parentId;
     }
 
 }
