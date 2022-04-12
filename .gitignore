@@ -1,2 +1,10 @@
 .deps
 artifacts/
+
+#hardhat
+node_modules
+.env
+coverage
+coverage.json
+typechain
+cache
