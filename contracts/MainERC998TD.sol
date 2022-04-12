@@ -39,7 +39,7 @@ contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
     // address constant public CURRENT_ERC = address(this); // misscode
 
     event Connected(uint256 childId, uint256 parentId);
-    
+
     function _exist(address x) private returns (bool) {
         return x != address(0);
     }
@@ -73,10 +73,9 @@ contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
     public override view returns (bytes32) {
         uint256 _parentTokenID = chld2prnt[_childTokenId];
         uint256 _parentOwner = _address2uint(tokenOwnerOf[_parentTokenID]);
-
+        
         if (_parentOwner == 0) return _toBytes(ERC998_MAGIC | _address2uint(tokenOwnerOf[_childTokenId])); // TODO: right shift _parentOwner on x bits 
         else return rootOwnerOfChild(_childContract, _parentTokenID);
-        
     }
 
     function ownerOfChild( 

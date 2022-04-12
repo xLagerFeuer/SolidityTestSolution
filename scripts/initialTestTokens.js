@@ -8,7 +8,7 @@ const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
 const web3 = createAlchemyWeb3(API_URL);
 
 const contract = require("../contracts/artifacts/ERC998ERC721TopDown.json")
-const contractAddress = "0x753d6543deD3A95F77f59550AF2dBb22bC07b365"
+const contractAddress = "0x9E71af0FFa4553d81388268C1Bf808ba4D97656c"
 const nftContract = new web3.eth.Contract(contract.abi, contractAddress)
 
 async function mintNFT(tokenURI) {
@@ -147,4 +147,4 @@ async function rootOwnerOf(_tokenId) {
 //   "meme5"
 // )
 
-connectChild(4, 5)
+// connectChild(4, 5)
