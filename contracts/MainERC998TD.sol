@@ -65,14 +65,14 @@ contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
     }
 
     function rootOwnerOfChild(
-        address _childContract, // TODO: rewrite _childContract
+        address _childContract,
         uint256 _childTokenId 
     )
     public override view returns (bytes32) {
         uint256 _parentTokenID = chld2prnt[_childTokenId];
         uint256 _parentOwner = _address2uint(tokenOwnerOf[_parentTokenID]);
 
-        if (_parentOwner == 0) return _toBytes(ERC998_MAGIC | _parentOwner); // TODO: right shift _parentOwner on x bits 
+        if (_parentOwner == 0) return _toBytes(ERC998_MAGIC | _address2uint(tokenOwnerOf[_childTokenId])); // TODO: right shift _parentOwner on x bits 
         else return rootOwnerOfChild(_childContract, _parentTokenID);
         
     }
@@ -89,6 +89,7 @@ contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
         uint256 _parentOwner = _address2uint(tokenOwnerOf[_parentTokenID]);
         require(_parentOwner != 0, "No parents");
 
+        // ERROR: bytes are empty
         return (_toBytes(ERC998_MAGIC | _parentOwner), _parentTokenID); // TODO: right shift _parentOwner on x bits 
     }
     
@@ -99,6 +100,7 @@ contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
     ) 
     public onlyOwner {
         require(tokenOwnerOf[childId] != address(0) && tokenOwnerOf[parentId] != address(0), "Child or parent token does not exist");
+        require(chld2prnt[childId] != parentId, "Token already connected");
         prnt2chld[parentId].push(childId);
         chld2prnt[childId] = parentId;
     }
