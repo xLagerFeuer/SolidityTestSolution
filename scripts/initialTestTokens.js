@@ -138,3 +138,13 @@ async function rootOwnerOf(_tokenId) {
 // connectChild(3, 4)
 
 // rootOwnerOf(1) // output 4
+
+// mintNFT(
+//   "meme4"
+// )
+
+// mintNFT(
+//   "meme5"
+// )
+
+connectChild(4, 5)
