@@ -15,6 +15,7 @@ contract MainERC721 is ERC721URIStorage, Ownable  {
     mapping(uint256=>address) public tokenOwnerOf;
 
     constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) {}
+    event Minted(uint256 tokenId, string tokenURI, address owner);
 
     function mintNFT(string memory _tokenURI)
         public onlyOwner
@@ -28,6 +29,7 @@ contract MainERC721 is ERC721URIStorage, Ownable  {
 
         tokenOwnerOf[newID] = _msgSender();
 
+        emit Minted(newID, _tokenURI, _msgSender());
         return newID;
     }
     
@@ -44,6 +46,7 @@ contract MainERC721 is ERC721URIStorage, Ownable  {
 
         tokenOwnerOf[newID] = _recipient;
 
+        emit Minted(newID, _tokenURI, _msgSender());
         return newID;
     }
 

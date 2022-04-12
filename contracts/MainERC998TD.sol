@@ -37,6 +37,8 @@ contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
     uint256 constant public ERC998_MAGIC = uint256(0xcd740db5); // TODO: maybe cast it to bytes4
     bytes4 constant public ERC721_MAGIC = 0x150b7a02;
     // address constant public CURRENT_ERC = address(this); // misscode
+
+    event Connected(uint256 childId, uint256 parentId);
     
     function _exist(address x) private returns (bool) {
         return x != address(0);
@@ -103,6 +105,7 @@ contract ERC998ERC721TopDown is IERC998ERC721TopDown, Ownable, MainERC721  {
         require(chld2prnt[childId] != parentId, "Token already connected");
         prnt2chld[parentId].push(childId);
         chld2prnt[childId] = parentId;
+        emit Connected(childId, parentId);
     }
 
 
